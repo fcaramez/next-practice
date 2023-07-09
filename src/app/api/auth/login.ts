@@ -4,9 +4,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
 
-interface SignupBody extends NextApiRequest {
+interface LoginBody extends NextApiRequest {
   body: {
-    username: string;
     email: string;
     password: string;
   };
@@ -15,19 +14,19 @@ interface SignupBody extends NextApiRequest {
 const { TOKEN_SECRET } = getEnvVars();
 
 export default async function index(
-  req: SignupBody,
+  req: LoginBody,
   res: NextApiResponse<ApiRespose>
 ) {
   try {
     if (req.method !== "POST")
       return res.status(405).json({
-        message: "Method not allowed",
+        message: "Invalid method",
         success: false,
       });
 
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !email || !password)
+    if (!email || !password)
       return res.status(400).json({
         message: "Fields are mandatory",
         success: false,
@@ -39,34 +38,33 @@ export default async function index(
       },
     });
 
-    if (userToFind)
+    if (!userToFind)
       return res.status(403).json({
-        message: "Email already in use",
+        message: "This user does not exist",
         success: false,
       });
 
-    const salt = await bcrypt.genSalt(10);
+    const validatePassword = await bcrypt.compare(
+      password,
+      userToFind.password
+    );
 
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        username,
-      },
-    });
+    if (!validatePassword)
+      return res.status(403).json({
+        message: "Invalid password",
+        success: false,
+      });
 
     const payload = {
-      email: newUser.email,
-      username: newUser.username,
-      userId: newUser.id,
+      username: userToFind.username,
+      email: userToFind.email,
+      userId: userToFind.id,
     };
 
     const authToken = jwt.sign(payload, TOKEN_SECRET);
 
-    return res.status(201).json({
-      message: `Welcome aboard, ${newUser.username}!`,
+    return res.status(200).json({
+      message: `Welcome back, ${userToFind.username}`,
       success: true,
       data: {
         ...payload,
@@ -75,7 +73,7 @@ export default async function index(
     });
   } catch (_) {
     return res.status(500).json({
-      message: "Internal Server Error",
+      message: "Internal server error",
       success: false,
     });
   }
