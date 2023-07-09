@@ -1,4 +1,38 @@
+import { SubmitHandler, useForm } from "react-hook-form";
+import { fetcher } from "../lib";
+import { ApiResponse } from "@/types/api";
+
+type Inputs = {
+  email: string;
+  password: string;
+  username: string;
+};
+
 export default function Page() {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<Inputs>();
+
+  const onSubmit: SubmitHandler<Inputs> = async data => {
+    const payload = JSON.stringify(data);
+
+    const res: ApiResponse = await fetcher("/api/auth/signup", {
+      method: "POST",
+      body: payload,
+      headers: {
+        "Content-type": "Application/json",
+      },
+    });
+
+    const {
+      data: { authToken, username, id },
+      message,
+    } = res;
+  };
+
   return (
     <>
       <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">

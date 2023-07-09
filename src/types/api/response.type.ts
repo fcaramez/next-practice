@@ -1,5 +1,5 @@
-export type ApiRespose = {
+export type ApiResponse = {
   message: string;
   success: boolean;
-  data?: Record<string, string>;
+  data?: any;
 };

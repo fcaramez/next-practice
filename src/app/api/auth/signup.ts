@@ -1,5 +1,5 @@
 import { getEnvVars, prisma } from "@/app/lib";
-import { ApiRespose } from "@/types/api";
+import { ApiResponse } from "@/types/api";
 import { NextApiRequest, NextApiResponse } from "next";
 import * as bcrypt from "bcrypt";
 import * as jwt from "jsonwebtoken";
@@ -16,7 +16,7 @@ const { TOKEN_SECRET } = getEnvVars();
 
 export default async function index(
   req: SignupBody,
-  res: NextApiResponse<ApiRespose>
+  res: NextApiResponse<ApiResponse>
 ) {
   try {
     if (req.method !== "POST")
